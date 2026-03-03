@@ -60,7 +60,9 @@ jobs:
             librsvg2-dev \
             patchelf
 
-      - name: Build Tauri app
+      # Tag push: build + create draft GitHub Release with installers
+      - name: Build & Release
+        if: startsWith(github.ref, 'refs/tags/')
         uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -72,3 +74,13 @@ jobs:
           releaseBody: "See the assets below to download the installer for your platform."
           releaseDraft: true
           prerelease: false
+
+      # Manual dispatch: build only, upload artifacts for download
+      - name: Build
+        if: ${{ !startsWith(github.ref, 'refs/tags/') }}
+        uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tauriScript: npx tauri
+          args: --target ${{ matrix.target }}
