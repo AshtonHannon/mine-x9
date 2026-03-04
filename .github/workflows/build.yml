@@ -24,18 +24,23 @@ jobs:
           - platform: macos-latest
             target: aarch64-apple-darwin
             label: macOS (Apple Silicon)
+            args: --target aarch64-apple-darwin
           - platform: macos-latest
             target: x86_64-apple-darwin
             label: macOS (Intel)
+            args: --target x86_64-apple-darwin
           - platform: ubuntu-22.04
             target: x86_64-unknown-linux-gnu
             label: Linux (x64)
+            args: --target x86_64-unknown-linux-gnu
           - platform: ubuntu-22.04
             target: aarch64-unknown-linux-gnu
             label: Linux (arm64)
+            args: --target aarch64-unknown-linux-gnu --bundles deb,rpm
           - platform: windows-latest
             target: x86_64-pc-windows-msvc
             label: Windows (x64)
+            args: --target x86_64-pc-windows-msvc
 
     name: ${{ matrix.label }}
     runs-on: ${{ matrix.platform }}
@@ -111,7 +116,7 @@ jobs:
           PKG_CONFIG_SYSROOT_DIR: ${{ matrix.target == 'aarch64-unknown-linux-gnu' && '/' || '' }}
         with:
           tauriScript: npx tauri
-          args: --target ${{ matrix.target }}
+          args: ${{ matrix.args }}
           tagName: ${{ github.ref_name }}
           releaseName: "MineX9 ${{ github.ref_name }}"
           releaseBody: "See the assets below to download the installer for your platform."
@@ -130,4 +135,4 @@ jobs:
           PKG_CONFIG_SYSROOT_DIR: ${{ matrix.target == 'aarch64-unknown-linux-gnu' && '/' || '' }}
         with:
           tauriScript: npx tauri
-          args: --target ${{ matrix.target }}
+          args: ${{ matrix.args }}
