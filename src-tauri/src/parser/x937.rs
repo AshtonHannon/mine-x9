@@ -1,8 +1,10 @@
 use std::fs;
+use std::io::Cursor;
 
 use base64::engine::general_purpose::STANDARD as BASE64;
 use base64::Engine;
 use ebcdic::ebcdic::Ebcdic;
+use image::ImageFormat;
 use serde::Serialize;
 
 const RECORD_LEN: usize = 80;
@@ -104,10 +106,18 @@ pub fn get_record_image(
         return Ok(None);
     };
 
+    // Convert TIFF images to PNG for cross-platform browser compatibility
+    // (macOS WebKit supports TIFF natively, but Windows WebView2/Chromium does not)
+    let (final_mime, final_bytes) = if mime_type == "image/tiff" {
+        convert_tiff_to_png(image_bytes)?
+    } else {
+        (mime_type.to_string(), image_bytes.to_vec())
+    };
+
     Ok(Some(RecordImage {
-        mime_type: mime_type.to_string(),
-        data_base64: BASE64.encode(image_bytes),
-        byte_len: image_bytes.len(),
+        mime_type: final_mime,
+        data_base64: BASE64.encode(&final_bytes),
+        byte_len: final_bytes.len(),
         record_index,
         line_number,
     }))
@@ -342,6 +352,17 @@ fn extract_image_payload(record_bytes: &[u8]) -> Option<(&'static str, &[u8])> {
 
     let (start, mime) = selected?;
     Some((mime, &search_space[start..]))
+}
+
+fn convert_tiff_to_png(tiff_bytes: &[u8]) -> Result<(String, Vec<u8>), String> {
+    let img = image::load_from_memory_with_format(tiff_bytes, ImageFormat::Tiff)
+        .map_err(|e| format!("failed to decode TIFF image: {e}"))?;
+
+    let mut png_buf = Cursor::new(Vec::new());
+    img.write_to(&mut png_buf, ImageFormat::Png)
+        .map_err(|e| format!("failed to encode PNG image: {e}"))?;
+
+    Ok(("image/png".to_string(), png_buf.into_inner()))
 }
 
 fn find_subslice(haystack: &[u8], needle: &[u8]) -> Option<usize> {

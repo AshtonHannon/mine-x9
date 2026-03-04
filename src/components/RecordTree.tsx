@@ -149,7 +149,7 @@ function CashLetterSection({
   onOpenRecordWindow,
   onOpenEntryWindow,
 }: CashLetterSectionProps) {
-  const [expanded, setExpanded] = useState(true);
+  const [expanded, setExpanded] = useState(false);
 
   const totalCents = useMemo(
     () => sumCashLettersCents([cashLetter]),
@@ -235,7 +235,7 @@ function BundleSection({
   onOpenRecordWindow,
   onOpenEntryWindow,
 }: BundleSectionProps) {
-  const [expanded, setExpanded] = useState(true);
+  const [expanded, setExpanded] = useState(false);
 
   const totalCents = useMemo(
     () => sumEntriesCents(bundle.entries),
